@@ -3,41 +3,50 @@ import { ASSET_SPECS, BrandingColors } from './types';
 
 export async function processLogo(buffer: Buffer, customColors?: Partial<BrandingColors>) {
   const results: Record<string, Buffer> = {};
-  
+  const monochrome = customColors?.monochrome || 'original';
+
   // Extract dominant color for auto-mode
   const stats = await sharp(buffer).stats();
   const dominant = stats.channels.map(c => Math.round(c.mean));
   const extractedPrimary = `rgb(${dominant[0]}, ${dominant[1]}, ${dominant[2]})`;
-  
+
   const primary = customColors?.primary || extractedPrimary;
 
   for (const [key, spec] of Object.entries(ASSET_SPECS)) {
     const logoPadding = customColors?.logoPadding || 0;
     let pipeline;
 
-    if (key !== 'background' && logoPadding > 0) {
-      const padding = Math.round(Math.min(spec.width, spec.height) * (logoPadding / 100));
-      pipeline = sharp(buffer)
-        .resize(spec.width - padding * 2, spec.height - padding * 2, {
-          fit: 'contain',
-          background: { r: 0, g: 0, b: 0, alpha: 0 }
-        })
-        .extend({
-          top: padding,
-          bottom: padding,
-          left: padding,
-          right: padding,
-          background: { r: 0, g: 0, b: 0, alpha: 0 }
-        });
-    } else {
-      pipeline = sharp(buffer)
-        .resize(spec.width, spec.height, {
-          fit: 'contain',
-          background: { r: 0, g: 0, b: 0, alpha: 0 }
-        });
-    }
+    if (key !== 'background') {
+      pipeline = sharp(buffer);
 
-    if (key === 'background') {
+      if (monochrome === 'white') {
+        pipeline = pipeline.negate().grayscale().threshold(128);
+      } else if (monochrome === 'black') {
+        pipeline = pipeline.grayscale().threshold(128);
+      }
+
+      if (logoPadding > 0) {
+        const padding = Math.round(Math.min(spec.width, spec.height) * (logoPadding / 100));
+        pipeline = pipeline
+          .resize(spec.width - padding * 2, spec.height - padding * 2, {
+            fit: 'contain',
+            background: { r: 0, g: 0, b: 0, alpha: 0 }
+          })
+          .extend({
+            top: padding,
+            bottom: padding,
+            left: padding,
+            right: padding,
+            background: { r: 0, g: 0, b: 0, alpha: 0 }
+          });
+      } else {
+        pipeline = pipeline
+          .resize(spec.width, spec.height, {
+            fit: 'contain',
+            background: { r: 0, g: 0, b: 0, alpha: 0 }
+          });
+      }
+    } else {
       if (customColors?.secondary) {
         const svg = `
           <svg width="${spec.width}" height="${spec.height}">
@@ -71,7 +80,8 @@ export async function processLogo(buffer: Buffer, customColors?: Partial<Brandin
     colors: { 
       primary, 
       secondary: customColors?.secondary,
-      logoPadding: customColors?.logoPadding
+      logoPadding: customColors?.logoPadding,
+      monochrome
     }
   };
 }
