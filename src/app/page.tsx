@@ -12,6 +12,7 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isManual, setIsManual] = useState(false);
   const [primaryColor, setPrimaryColor] = useState('#000000');
+  const [secondaryColor, setSecondaryColor] = useState('#000000');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -39,6 +40,7 @@ export default function Home() {
     
     if (isManual) {
       formData.append('primary', primaryColor);
+      formData.append('secondary', secondaryColor);
     }
 
     try {
@@ -127,6 +129,18 @@ export default function Home() {
                   className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <span className="text-sm font-mono text-zinc-500 uppercase">{primaryColor}</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <label htmlFor="secondary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Secondary Brand Color (for gradients)</label>
+                <input
+                  id="secondary-color"
+                  type="color"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  disabled={!isManual}
+                  className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <span className="text-sm font-mono text-zinc-500 uppercase">{secondaryColor}</span>
               </div>
             </div>
 

@@ -19,14 +19,29 @@ export async function processLogo(buffer: Buffer, customColors?: Partial<Brandin
       });
 
     if (key === 'background') {
-      pipeline = sharp({
-        create: {
-          width: spec.width,
-          height: spec.height,
-          channels: 4,
-          background: primary
-        }
-      });
+      if (customColors?.secondary) {
+        const svg = `
+          <svg width="${spec.width}" height="${spec.height}">
+            <defs>
+              <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:${primary};stop-opacity:1" />
+                <stop offset="100%" style="stop-color:${customColors.secondary};stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grad)" />
+          </svg>
+        `;
+        pipeline = sharp(Buffer.from(svg));
+      } else {
+        pipeline = sharp({
+          create: {
+            width: spec.width,
+            height: spec.height,
+            channels: 4,
+            background: primary
+          }
+        });
+      }
     }
 
     results[key] = await pipeline.toFormat(spec.format).toBuffer();
@@ -34,6 +49,6 @@ export async function processLogo(buffer: Buffer, customColors?: Partial<Brandin
   
   return {
     assets: results,
-    colors: { primary }
+    colors: { primary, secondary: customColors?.secondary }
   };
 }

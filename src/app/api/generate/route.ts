@@ -6,11 +6,12 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get('logo') as File;
     const primary = formData.get('primary') as string;
+    const secondary = formData.get('secondary') as string;
     
     if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const { assets, colors } = await processLogo(buffer, { primary });
+    const { assets, colors } = await processLogo(buffer, { primary, secondary });
     
     const assetResponse: Record<string, string> = {};
     for (const [key, buf] of Object.entries(assets)) {
