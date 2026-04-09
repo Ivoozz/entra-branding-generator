@@ -45,7 +45,7 @@ export default function Sidebar() {
   };
 
   const handleNewProject = async () => {
-    const id = crypto.randomUUID();
+    const id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const newProject: Project = {
       id,
       name: `Untitled Project ${projects.length + 1}`,
