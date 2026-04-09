@@ -19,6 +19,7 @@ export interface BrandingColors {
   primary: string; // HEX or RGB
   secondary?: string; // HEX or RGB
   darkBackground?: string; // HEX or RGB
+  logoPadding?: number; // 0 to 50
 }
 
 export interface BrandingResponse {

@@ -7,11 +7,12 @@ export async function POST(req: NextRequest) {
     const file = formData.get('logo') as File;
     const primary = formData.get('primary') as string;
     const secondary = formData.get('secondary') as string;
+    const logoPadding = formData.get('logoPadding') ? Number(formData.get('logoPadding')) : undefined;
     
     if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const { assets, colors } = await processLogo(buffer, { primary, secondary });
+    const { assets, colors } = await processLogo(buffer, { primary, secondary, logoPadding });
     
     const assetResponse: Record<string, string> = {};
     for (const [key, buf] of Object.entries(assets)) {

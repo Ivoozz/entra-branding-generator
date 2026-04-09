@@ -14,6 +14,8 @@ export default function Home() {
   const [isManual, setIsManual] = useState(false);
   const [primaryColor, setPrimaryColor] = useState('#000000');
   const [secondaryColor, setSecondaryColor] = useState('#000000');
+  const [logoPadding, setLogoPadding] = useState(0);
+  const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
 
   const contrastInfo = useMemo(() => {
     const ratio = getContrastRatio(primaryColor, '#FFFFFF');
@@ -49,6 +51,8 @@ export default function Home() {
       formData.append('primary', primaryColor);
       formData.append('secondary', secondaryColor);
     }
+    
+    formData.append('logoPadding', logoPadding.toString());
 
     try {
       const res = await fetch('/api/generate', {
@@ -114,48 +118,108 @@ export default function Home() {
               </button>
             </div>
 
-            <div className="flex flex-col gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center justify-between">
-                <label htmlFor="manual-mode" className="font-medium cursor-pointer">Manual Color Override</label>
-                <input
-                  id="manual-mode"
-                  type="checkbox"
-                  checked={isManual}
-                  onChange={(e) => setIsManual(e.target.checked)}
-                  className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex items-center gap-4">
-                <label htmlFor="primary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Primary Brand Color</label>
-                <input
-                  id="primary-color"
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  disabled={!isManual}
-                  className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <span className="text-sm font-mono text-zinc-500 uppercase">{primaryColor}</span>
-                <span className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 ${
-                  contrastInfo.rating === 'Fail' || contrastInfo.rating === 'AA Large'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-green-100 text-green-700'
-                }`}>
-                  {contrastInfo.rating === 'Fail' || contrastInfo.rating === 'AA Large' ? '⚠️ Low Contrast' : '✅ Good Contrast'} ({contrastInfo.ratio.toFixed(2)}:1)
-                </span>
-              </div>
-              <div className="flex items-center gap-4">
-                <label htmlFor="secondary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Secondary Brand Color (for gradients)</label>
-                <input
-                  id="secondary-color"
-                  type="color"
-                  value={secondaryColor}
-                  onChange={(e) => setSecondaryColor(e.target.value)}
-                  disabled={!isManual}
-                  className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <span className="text-sm font-mono text-zinc-500 uppercase">{secondaryColor}</span>
-              </div>
+            <div className="flex border-b border-zinc-200 dark:border-zinc-800">
+              <button
+                onClick={() => setActiveTab('basic')}
+                className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                  activeTab === 'basic' 
+                    ? 'border-blue-500 text-blue-600' 
+                    : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                }`}
+              >
+                Basic
+              </button>
+              <button
+                onClick={() => setActiveTab('advanced')}
+                className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                  activeTab === 'advanced' 
+                    ? 'border-blue-500 text-blue-600' 
+                    : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                }`}
+              >
+                Advanced
+              </button>
+            </div>
+
+            <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-800 min-h-[200px]">
+              {activeTab === 'basic' ? (
+                <div className="flex flex-col gap-4">
+                  <p className="text-sm text-zinc-500">Auto-extracted colors will be used. Upload a logo to see the results.</p>
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="manual-mode-basic" className="font-medium cursor-pointer">Manual Color Override</label>
+                    <input
+                      id="manual-mode-basic"
+                      type="checkbox"
+                      checked={isManual}
+                      onChange={(e) => setIsManual(e.target.checked)}
+                      className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="manual-mode-adv" className="font-medium cursor-pointer">Manual Color Override</label>
+                      <input
+                        id="manual-mode-adv"
+                        type="checkbox"
+                        checked={isManual}
+                        onChange={(e) => setIsManual(e.target.checked)}
+                        className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label htmlFor="primary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Primary Brand Color</label>
+                      <input
+                        id="primary-color"
+                        type="color"
+                        value={primaryColor}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        disabled={!isManual}
+                        className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      <span className="text-sm font-mono text-zinc-500 uppercase">{primaryColor}</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 ${
+                        contrastInfo.rating === 'Fail' || contrastInfo.rating === 'AA Large'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {contrastInfo.rating === 'Fail' || contrastInfo.rating === 'AA Large' ? '⚠️ Low Contrast' : '✅ Good Contrast'} ({contrastInfo.ratio.toFixed(2)}:1)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label htmlFor="secondary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Secondary Brand Color (for gradients)</label>
+                      <input
+                        id="secondary-color"
+                        type="color"
+                        value={secondaryColor}
+                        onChange={(e) => setSecondaryColor(e.target.value)}
+                        disabled={!isManual}
+                        className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      <span className="text-sm font-mono text-zinc-500 uppercase">{secondaryColor}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
+                    <div className="flex justify-between items-center">
+                      <label htmlFor="logo-padding" className="font-medium">Logo Padding / Zoom</label>
+                      <span className="text-sm font-mono bg-zinc-200 dark:bg-zinc-700 px-2 py-1 rounded">{logoPadding}%</span>
+                    </div>
+                    <input
+                      id="logo-padding"
+                      type="range"
+                      min="0"
+                      max="50"
+                      value={logoPadding}
+                      onChange={(e) => setLogoPadding(parseInt(e.target.value))}
+                      className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    />
+                    <p className="text-xs text-zinc-500">Increases the whitespace around the logo in square assets.</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <button

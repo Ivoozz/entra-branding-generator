@@ -12,11 +12,30 @@ export async function processLogo(buffer: Buffer, customColors?: Partial<Brandin
   const primary = customColors?.primary || extractedPrimary;
 
   for (const [key, spec] of Object.entries(ASSET_SPECS)) {
-    let pipeline = sharp(buffer)
-      .resize(spec.width, spec.height, {
-        fit: 'contain',
-        background: { r: 0, g: 0, b: 0, alpha: 0 }
-      });
+    const logoPadding = customColors?.logoPadding || 0;
+    let pipeline;
+
+    if (key !== 'background' && logoPadding > 0) {
+      const padding = Math.round(Math.min(spec.width, spec.height) * (logoPadding / 100));
+      pipeline = sharp(buffer)
+        .resize(spec.width - padding * 2, spec.height - padding * 2, {
+          fit: 'contain',
+          background: { r: 0, g: 0, b: 0, alpha: 0 }
+        })
+        .extend({
+          top: padding,
+          bottom: padding,
+          left: padding,
+          right: padding,
+          background: { r: 0, g: 0, b: 0, alpha: 0 }
+        });
+    } else {
+      pipeline = sharp(buffer)
+        .resize(spec.width, spec.height, {
+          fit: 'contain',
+          background: { r: 0, g: 0, b: 0, alpha: 0 }
+        });
+    }
 
     if (key === 'background') {
       if (customColors?.secondary) {
@@ -49,6 +68,10 @@ export async function processLogo(buffer: Buffer, customColors?: Partial<Brandin
   
   return {
     assets: results,
-    colors: { primary, secondary: customColors?.secondary }
+    colors: { 
+      primary, 
+      secondary: customColors?.secondary,
+      logoPadding: customColors?.logoPadding
+    }
   };
 }
