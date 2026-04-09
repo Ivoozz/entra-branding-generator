@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import JSZip from 'jszip';
+import { Sun, Moon } from 'lucide-react';
 import BrandingPreview from '@/components/BrandingPreview';
 import LoginMockup from '@/components/LoginMockup';
 import { getContrastRatio, getContrastRating } from '@/lib/accessibility';
@@ -16,6 +17,7 @@ export default function Home() {
   const [secondaryColor, setSecondaryColor] = useState('#000000');
   const [logoPadding, setLogoPadding] = useState(0);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const contrastInfo = useMemo(() => {
     const ratio = getContrastRatio(primaryColor, '#FFFFFF');
@@ -88,9 +90,22 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen items-center bg-zinc-50 dark:bg-black p-8 font-sans">
+    <div className="flex flex-col min-h-screen items-center bg-zinc-50 dark:bg-black p-8 font-sans transition-colors duration-300">
       <main className="w-full max-w-4xl flex flex-col items-center">
-        <h1 className="text-4xl font-bold mb-8">Entra ID Branding Generator</h1>
+        <div className="flex justify-between w-full items-center mb-8">
+          <h1 className="text-4xl font-bold">Entra ID Branding Generator</h1>
+          <button
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            className="p-3 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all"
+            aria-label="Toggle Theme"
+          >
+            {theme === 'light' ? (
+              <Moon className="w-6 h-6 text-zinc-600" />
+            ) : (
+              <Sun className="w-6 h-6 text-yellow-500" />
+            )}
+          </button>
+        </div>
         
         <div className="w-full p-8 bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 mb-8">
           <div className="flex flex-col gap-6">
@@ -237,8 +252,9 @@ export default function Home() {
             <LoginMockup 
               backgroundUrl={assets.background || null} 
               logoUrl={assets.banner || assets.squareLight || null} 
+              theme={theme}
             />
-            <BrandingPreview assets={assets} />
+            <BrandingPreview assets={assets} currentTheme={theme} />
             <button
               onClick={handleDownloadAll}
               className="mt-8 px-8 py-4 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 transition-all shadow-md"
