@@ -35,13 +35,15 @@ export default function LoginMockup({ backgroundUrl, logoUrl, theme }: LoginMock
             {/* Logo */}
             <div className="mb-6 h-10 relative w-full flex items-start">
               {logoUrl ? (
-                <Image
-                  src={logoUrl}
-                  alt="Organization Logo"
-                  width={245}
-                  height={36}
-                  className="object-contain object-left"
-                />
+                <div className="checkerboard rounded p-1 border border-zinc-100 dark:border-zinc-800">
+                  <Image
+                    src={logoUrl}
+                    alt="Organization Logo"
+                    width={245}
+                    height={36}
+                    className="object-contain object-left max-h-8 w-auto"
+                  />
+                </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 bg-blue-600 rounded-sm" />

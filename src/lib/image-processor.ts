@@ -12,10 +12,16 @@ export async function processLogo(
   // Extract dominant color for auto-mode
   const stats = await sharp(buffer).stats();
   const dominant = stats.channels.map(c => Math.round(c.mean));
-  const extractedPrimary = `rgb(${dominant[0]}, ${dominant[1]}, ${dominant[2]})`;
+
+  // Calculate perceived brightness: (R*299 + G*587 + B*114) / 1000
+  const brightness = (dominant[0] * 299 + dominant[1] * 587 + dominant[2] * 114) / 1000;
+
+  // If brightness is too high (> 240, almost white), default to Microsoft Blue
+  const extractedPrimary = brightness > 240 
+    ? '#0078d4' 
+    : `rgb(${dominant[0]}, ${dominant[1]}, ${dominant[2]})`;
 
   const primary = customColors?.primary || extractedPrimary;
-
   for (const [key, spec] of Object.entries(ASSET_SPECS)) {
     const logoPadding = customColors?.logoPadding || 0;
     let pipeline;

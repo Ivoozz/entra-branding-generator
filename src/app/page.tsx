@@ -289,9 +289,9 @@ function GeneratorApp() {
           <>
             <div className="w-full p-8 bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 mb-8">
               <div className="flex flex-col gap-6">
-                <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg p-12 text-center hover:border-blue-500 transition-colors relative overflow-hidden group">
+                <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg p-12 text-center hover:border-blue-500 transition-colors relative overflow-hidden group checkerboard">
                   {logoDataUrl && (
-                    <img src={logoDataUrl} alt="Logo" className="absolute inset-0 w-full h-full object-contain opacity-10 group-hover:opacity-20 transition-opacity" />
+                    <img src={logoDataUrl} alt="Logo" className="absolute inset-0 w-full h-full object-contain p-4 group-hover:scale-105 transition-transform" />
                   )}
                   <input type="file" onChange={handleFileChange} className="hidden" id="file-upload" accept="image/*" />
                   <label htmlFor="file-upload" className="cursor-pointer relative z-10">

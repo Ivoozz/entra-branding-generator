@@ -24,12 +24,12 @@ export default function BrandingPreview({ assets, currentTheme }: BrandingPrevie
                 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 ring-1 ring-blue-500' 
                 : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'
             }`}>
-              <div className="relative w-16 h-16 flex-shrink-0 bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden mr-4">
+              <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden mr-4 border border-zinc-200 dark:border-zinc-800 checkerboard">
                 <Image
                   src={base64}
                   alt={spec.name}
                   fill
-                  className="object-contain p-2"
+                  className="object-contain p-1"
                 />
               </div>
               <div className="flex-1 min-w-0">
