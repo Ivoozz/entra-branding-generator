@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db, Project } from '@/lib/db';
-import { Plus, Folder, Trash2, MoreVertical, Search, Zap, Settings, Loader2 } from 'lucide-react';
+import { Plus, Folder, Trash2, MoreVertical, Search, Zap, Settings, Loader2, Download, Upload } from 'lucide-react';
 
 export default function Sidebar() {
   const router = useRouter();
@@ -74,6 +74,40 @@ export default function Sidebar() {
     }
   };
 
+  const handleExportProject = async (project: Project, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(project));
+    const el = document.createElement('a');
+    el.setAttribute("href", dataStr);
+    el.setAttribute("download", `${project.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.branding`);
+    document.body.appendChild(el);
+    el.click();
+    el.remove();
+  };
+
+  const handleImportProject = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const importedProject = JSON.parse(event.target?.result as string) as Project;
+        // Generate a new ID to avoid collisions
+        importedProject.id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        importedProject.name = `${importedProject.name} (Imported)`;
+        importedProject.updatedAt = Date.now();
+        
+        await db.projects.add(importedProject);
+        router.push(`/?project=${importedProject.id}`);
+      } catch (err) {
+        alert('Invalid .branding file format.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset input
+  };
+
   const filteredProjects = projects.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -86,13 +120,21 @@ export default function Sidebar() {
           <h2 className="text-xl font-black tracking-tight text-black dark:text-white uppercase">Entra Branding</h2>
         </div>
         
-        <button
-          onClick={handleNewProject}
-          className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          New Project
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleNewProject}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            New
+          </button>
+          
+          <label className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-black dark:text-white rounded-lg font-medium transition-all shadow-sm cursor-pointer">
+            <Upload className="w-4 h-4" />
+            Import
+            <input type="file" accept=".branding" className="hidden" onChange={handleImportProject} />
+          </label>
+        </div>
       </div>
 
       <div className="p-4 flex-1 overflow-auto">
@@ -126,12 +168,22 @@ export default function Sidebar() {
                   <Folder className={`w-4 h-4 shrink-0 ${selectedProjectId === project.id ? 'text-blue-500' : 'text-zinc-400'}`} />
                   <span className="truncate text-sm">{project.name}</span>
                 </div>
-                <button
-                  onClick={(e) => handleDeleteProject(project.id, e)}
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-all"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                <div className="opacity-0 group-hover:opacity-100 flex items-center transition-all">
+                  <button
+                    onClick={(e) => handleExportProject(project, e)}
+                    className="p-1.5 hover:text-blue-500 transition-all text-zinc-400"
+                    title="Export Project"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteProject(project.id, e)}
+                    className="p-1.5 hover:text-red-500 transition-all text-zinc-400"
+                    title="Delete Project"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             ))
           )}

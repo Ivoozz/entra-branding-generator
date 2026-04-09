@@ -10,9 +10,11 @@ import PreFlightCheck from '@/components/PreFlightCheck';
 import ProceduralBg, { ProceduralBgHandle } from '@/components/ProceduralBg';
 import { getContrastRatio, getContrastRating } from '@/lib/accessibility';
 import { generateStyleGuide } from '@/lib/style-guide';
+import { generateMagicPalettes } from '@/lib/color-theory';
 import { db, Project } from '@/lib/db';
 import { SharePointGenerator } from '@/components/SharePointGenerator';
 import { TeamsGenerator } from '@/components/TeamsGenerator';
+import { WindowsGenerator } from '@/components/WindowsGenerator';
 
 function GeneratorApp() {
   const searchParams = useSearchParams();
@@ -24,6 +26,7 @@ function GeneratorApp() {
   const [url, setUrl] = useState('');
   const [assets, setAssets] = useState<Record<string, string> | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
   const [isManual, setIsManual] = useState(false);
   const [primaryColor, setPrimaryColor] = useState('#0078d4');
   const [secondaryColor, setSecondaryColor] = useState('#000000');
@@ -35,7 +38,7 @@ function GeneratorApp() {
   const [projectName, setProjectName] = useState('Default Project');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [optimize, setOptimize] = useState(false);
-  const [toolMode, setToolMode] = useState<'entra' | 'sharepoint' | 'teams'>('entra');
+  const [toolMode, setToolMode] = useState<'entra' | 'sharepoint' | 'teams' | 'windows'>('entra');
 
   const proceduralBgRef = useRef<ProceduralBgHandle>(null);
 
@@ -127,6 +130,10 @@ function GeneratorApp() {
     return { ratio, rating };
   }, [primaryColor]);
 
+  const magicPalettes = useMemo(() => {
+    return generateMagicPalettes(primaryColor);
+  }, [primaryColor]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -155,6 +162,35 @@ function GeneratorApp() {
       reader.readAsDataURL(file);
     } catch (error) {
       console.error('Failed to fetch image from URL', error);
+    }
+  };
+
+  const handleRemoveBackground = async () => {
+    if (!logo) return;
+    setIsRemovingBg(true);
+    const formData = new FormData();
+    formData.append('logo', logo);
+
+    try {
+      const res = await fetch('/api/remove-bg', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Failed to remove background');
+      
+      const blob = await res.blob();
+      const file = new File([blob], `clean-${logo.name}`, { type: 'image/png' });
+      setLogo(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoDataUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('BG removal failed', error);
+      alert('Failed to remove background. Please try again.');
+    } finally {
+      setIsRemovingBg(false);
     }
   };
 
@@ -270,7 +306,7 @@ function GeneratorApp() {
         </div>
 
         <div className="w-full flex border-b border-zinc-200 dark:border-zinc-800 mb-8 overflow-x-auto scrollbar-hide">
-          {(['entra', 'sharepoint', 'teams'] as const).map((mode) => (
+          {(['entra', 'sharepoint', 'teams', 'windows'] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => setToolMode(mode)}
@@ -315,6 +351,16 @@ function GeneratorApp() {
                     Fetch
                   </button>
                 </div>
+                
+                {logo && (
+                  <button
+                    onClick={handleRemoveBackground}
+                    disabled={isRemovingBg}
+                    className="w-full py-2 bg-purple-600 text-white rounded-md font-semibold hover:bg-purple-700 disabled:bg-zinc-400 transition-all shadow-sm text-sm"
+                  >
+                    {isRemovingBg ? 'Removing Background...' : '✨ Magic Remove Background (AI)'}
+                  </button>
+                )}
 
                 <div className="flex border-b border-zinc-200 dark:border-zinc-800">
                   <button
@@ -398,6 +444,30 @@ function GeneratorApp() {
                           />
                           <span className="text-sm font-mono text-zinc-500 uppercase">{secondaryColor}</span>
                         </div>
+
+                        {isManual && magicPalettes.length > 0 && (
+                          <div className="mt-2 flex flex-col gap-2">
+                            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Magic Palettes (Click to set Secondary)</label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {magicPalettes.map((palette) => (
+                                <div key={palette.name} className="flex flex-col gap-1 p-2 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                                  <span className="text-xs text-zinc-500">{palette.name}</span>
+                                  <div className="flex gap-1">
+                                    {palette.colors.map((color, i) => (
+                                      <button
+                                        key={i}
+                                        onClick={() => setSecondaryColor(color)}
+                                        className="w-6 h-6 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-transform"
+                                        style={{ backgroundColor: color }}
+                                        title={`Set secondary color to ${color}`}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
@@ -518,9 +588,13 @@ function GeneratorApp() {
           <div className="w-full">
             <SharePointGenerator primaryColor={primaryColor} />
           </div>
-        ) : (
+        ) : toolMode === 'teams' ? (
           <div className="w-full">
             <TeamsGenerator assets={assets || {}} />
+          </div>
+        ) : (
+          <div className="w-full">
+            <WindowsGenerator assets={assets || {}} />
           </div>
         )}
       </main>

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { useState } from 'react';
 
 interface LoginMockupProps {
   backgroundUrl: string | null;
@@ -6,10 +7,68 @@ interface LoginMockupProps {
   theme: 'light' | 'dark';
 }
 
+const TRANSLATIONS = {
+  en: {
+    signIn: 'Sign in',
+    placeholder: 'Email, phone, or Skype',
+    noAccount: 'No account?',
+    createOne: 'Create one!',
+    cantAccess: "Can't access your account?",
+    next: 'Next',
+    signInOptions: 'Sign-in options',
+  },
+  nl: {
+    signIn: 'Aanmelden',
+    placeholder: 'E-mailadres, telefoonnummer of Skype',
+    noAccount: 'Geen account?',
+    createOne: 'Maak er een aan!',
+    cantAccess: 'Krijgt u geen toegang tot uw account?',
+    next: 'Volgende',
+    signInOptions: 'Aanmeldingsopties',
+  },
+  de: {
+    signIn: 'Anmelden',
+    placeholder: 'E-Mail, Telefon oder Skype',
+    noAccount: 'Sie haben noch kein Konto?',
+    createOne: 'Erstellen Sie jetzt eins!',
+    cantAccess: 'Können Sie nicht auf Ihr Konto zugreifen?',
+    next: 'Weiter',
+    signInOptions: 'Anmeldeoptionen',
+  },
+  fr: {
+    signIn: 'Se connecter',
+    placeholder: 'E-mail, téléphone ou Skype',
+    noAccount: "Vous n'avez pas de compte ?",
+    createOne: 'Créez-en un !',
+    cantAccess: "Votre compte est inaccessible ?",
+    next: 'Suivant',
+    signInOptions: 'Options de connexion',
+  }
+};
+
 export default function LoginMockup({ backgroundUrl, logoUrl, theme }: LoginMockupProps) {
+  const [lang, setLang] = useState<keyof typeof TRANSLATIONS>('en');
+  const t = TRANSLATIONS[lang];
+
   return (
     <div className="w-full mt-12 mb-12">
-      <h2 className="text-2xl font-bold mb-6 text-center">Live Preview (Mockup)</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Live Preview (Mockup)</h2>
+        <div className="flex items-center gap-2">
+          <label htmlFor="lang-select" className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Language Test:</label>
+          <select
+            id="lang-select"
+            value={lang}
+            onChange={(e) => setLang(e.target.value as keyof typeof TRANSLATIONS)}
+            className="p-1 border border-zinc-300 dark:border-zinc-700 rounded bg-white dark:bg-zinc-800 text-sm"
+          >
+            <option value="en">English (Short)</option>
+            <option value="nl">Dutch</option>
+            <option value="de">German (Long)</option>
+            <option value="fr">French</option>
+          </select>
+        </div>
+      </div>
       <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900">
         {/* Background Image */}
         {backgroundUrl ? (
@@ -54,12 +113,12 @@ export default function LoginMockup({ backgroundUrl, logoUrl, theme }: LoginMock
 
             {/* Content */}
             <div className="flex flex-col gap-4">
-              <h1 className={`text-2xl font-semibold ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Sign in</h1>
+              <h1 className={`text-2xl font-semibold ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{t.signIn}</h1>
               
               <div className="mt-2">
                 <input
                   type="email"
-                  placeholder="Email, phone, or Skype"
+                  placeholder={t.placeholder}
                   disabled
                   className={`w-full border-b py-1.5 outline-none transition-colors bg-transparent placeholder:text-zinc-500 ${
                     theme === 'light' 
@@ -71,9 +130,9 @@ export default function LoginMockup({ backgroundUrl, logoUrl, theme }: LoginMock
 
               <div className="mt-4 text-sm">
                 <p className={theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}>
-                  No account? <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Create one!</a>
+                  {t.noAccount} <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">{t.createOne}</a>
                 </p>
-                <p className="text-blue-600 dark:text-blue-400 hover:underline mt-2">Can't access your account?</p>
+                <p className="text-blue-600 dark:text-blue-400 hover:underline mt-2">{t.cantAccess}</p>
               </div>
 
               <div className="mt-8 flex justify-end gap-2">
@@ -85,7 +144,7 @@ export default function LoginMockup({ backgroundUrl, logoUrl, theme }: LoginMock
                       : 'bg-[#0067b8] text-white hover:bg-[#005da6] opacity-90'
                   }`}
                 >
-                  Next
+                  {t.next}
                 </button>
               </div>
             </div>
@@ -106,7 +165,7 @@ export default function LoginMockup({ backgroundUrl, logoUrl, theme }: LoginMock
                         <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 11V5h2v6H9zm0 4v-2h2v2H9z" />
                     </svg>
                 </div>
-                <span className={`text-sm ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>Sign-in options</span>
+                <span className={`text-sm ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>{t.signInOptions}</span>
             </div>
         </div>
       </div>

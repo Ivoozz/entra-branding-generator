@@ -13,8 +13,10 @@ export const ASSET_SPECS: Record<string, BrandingAsset> = {
   banner: { name: 'banner', width: 245, height: 36, maxSizeKB: 50, format: 'png' },
   squareLight: { name: 'square-light', width: 240, height: 240, maxSizeKB: 50, format: 'png' },
   squareDark: { name: 'square-dark', width: 240, height: 240, maxSizeKB: 50, format: 'png' },
-  teamsColorIcon: { name: 'teams-color', width: 192, height: 192, maxSizeKB: 50, format: 'png' },
-  teamsMonoIcon: { name: 'teams-mono', width: 32, height: 32, maxSizeKB: 5, format: 'png' },
+  teamsColorIcon: { name: 'teams-color', width: 192, height: 192, maxSizeKB: 2048, format: 'png' },
+  teamsMonoIcon: { name: 'teams-mono', width: 32, height: 32, maxSizeKB: 2048, format: 'png' },
+  intuneLogo: { name: 'intune-company-portal', width: 400, height: 100, maxSizeKB: 2048, format: 'png' },
+  autopilotBg: { name: 'windows-autopilot-bg', width: 1920, height: 1080, maxSizeKB: 2048, format: 'jpg' }
 };
 
 export interface BrandingColors {
