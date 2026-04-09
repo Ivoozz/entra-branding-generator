@@ -47,7 +47,10 @@ export async function processLogo(buffer: Buffer, customColors?: Partial<Brandin
           });
       }
     } else {
-      if (customColors?.secondary) {
+      if (customColors?.customBackground) {
+        const base64Data = customColors.customBackground.split(',')[1];
+        pipeline = sharp(Buffer.from(base64Data, 'base64'));
+      } else if (customColors?.secondary) {
         const svg = `
           <svg width="${spec.width}" height="${spec.height}">
             <defs>

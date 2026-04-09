@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import JSZip from 'jszip';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Image as ImageIcon, Layers, Palette } from 'lucide-react';
 import BrandingPreview from '@/components/BrandingPreview';
 import LoginMockup from '@/components/LoginMockup';
+import ProceduralBg, { ProceduralBgHandle } from '@/components/ProceduralBg';
 import { getContrastRatio, getContrastRating } from '@/lib/accessibility';
 
 export default function Home() {
@@ -15,10 +16,13 @@ export default function Home() {
   const [isManual, setIsManual] = useState(false);
   const [primaryColor, setPrimaryColor] = useState('#000000');
   const [secondaryColor, setSecondaryColor] = useState('#000000');
+  const [bgMode, setBgMode] = useState<'solid' | 'gradient' | 'procedural'>('solid');
   const [logoPadding, setLogoPadding] = useState(0);
   const [logoVariant, setLogoVariant] = useState<'original' | 'white' | 'black'>('original');
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  const proceduralBgRef = useRef<ProceduralBgHandle>(null);
 
   const contrastInfo = useMemo(() => {
     const ratio = getContrastRatio(primaryColor, '#FFFFFF');
@@ -58,6 +62,11 @@ export default function Home() {
     formData.append('logoPadding', logoPadding.toString());
     formData.append('monochrome', logoVariant);
 
+    if (bgMode === 'procedural' && proceduralBgRef.current) {
+      const customBackground = proceduralBgRef.current.getDataUrl();
+      formData.append('customBackground', customBackground);
+    }
+
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -93,6 +102,11 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen items-center bg-zinc-50 dark:bg-black p-8 font-sans transition-colors duration-300">
+      <ProceduralBg 
+        ref={proceduralBgRef}
+        primaryColor={primaryColor}
+        secondaryColor={secondaryColor}
+      />
       <main className="w-full max-w-4xl flex flex-col items-center">
         <div className="flex justify-between w-full items-center mb-8">
           <h1 className="text-4xl font-bold">Entra ID Branding Generator</h1>
@@ -216,6 +230,39 @@ export default function Home() {
                         className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <span className="text-sm font-mono text-zinc-500 uppercase">{secondaryColor}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
+                    <label className="font-medium">Background Style</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <button
+                        onClick={() => setBgMode('solid')}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
+                          bgMode === 'solid' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20' : 'border-zinc-200 dark:border-zinc-800'
+                        }`}
+                      >
+                        <Palette className="w-5 h-5" />
+                        <span className="text-xs font-medium">Solid</span>
+                      </button>
+                      <button
+                        onClick={() => setBgMode('gradient')}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
+                          bgMode === 'gradient' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20' : 'border-zinc-200 dark:border-zinc-800'
+                        }`}
+                      >
+                        <Layers className="w-5 h-5" />
+                        <span className="text-xs font-medium">Gradient</span>
+                      </button>
+                      <button
+                        onClick={() => setBgMode('procedural')}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
+                          bgMode === 'procedural' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20' : 'border-zinc-200 dark:border-zinc-800'
+                        }`}
+                      >
+                        <ImageIcon className="w-5 h-5" />
+                        <span className="text-xs font-medium">Procedural</span>
+                      </button>
                     </div>
                   </div>
 

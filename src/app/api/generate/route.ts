@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
     const secondary = formData.get('secondary') as string;
     const logoPadding = formData.get('logoPadding') ? Number(formData.get('logoPadding')) : undefined;
     const monochrome = formData.get('monochrome') as 'original' | 'white' | 'black' | null;
+    const customBackground = formData.get('customBackground') as string | null;
     
     if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
@@ -17,7 +18,8 @@ export async function POST(req: NextRequest) {
       primary, 
       secondary, 
       logoPadding,
-      monochrome: monochrome || 'original'
+      monochrome: monochrome || 'original',
+      customBackground
     });
     
     const assetResponse: Record<string, string> = {};

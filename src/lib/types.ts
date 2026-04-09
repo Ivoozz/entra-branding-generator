@@ -21,6 +21,7 @@ export interface BrandingColors {
   darkBackground?: string; // HEX or RGB
   logoPadding?: number; // 0 to 50
   monochrome?: 'original' | 'white' | 'black';
+  customBackground?: string | null;
 }
 
 export interface BrandingResponse {
