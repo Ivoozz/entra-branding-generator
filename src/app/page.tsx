@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import JSZip from 'jszip';
 import BrandingPreview from '@/components/BrandingPreview';
 import LoginMockup from '@/components/LoginMockup';
+import { getContrastRatio, getContrastRating } from '@/lib/accessibility';
 
 export default function Home() {
   const [logo, setLogo] = useState<File | null>(null);
@@ -13,6 +14,12 @@ export default function Home() {
   const [isManual, setIsManual] = useState(false);
   const [primaryColor, setPrimaryColor] = useState('#000000');
   const [secondaryColor, setSecondaryColor] = useState('#000000');
+
+  const contrastInfo = useMemo(() => {
+    const ratio = getContrastRatio(primaryColor, '#FFFFFF');
+    const rating = getContrastRating(ratio);
+    return { ratio, rating };
+  }, [primaryColor]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -129,6 +136,13 @@ export default function Home() {
                   className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <span className="text-sm font-mono text-zinc-500 uppercase">{primaryColor}</span>
+                <span className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 ${
+                  contrastInfo.rating === 'Fail' || contrastInfo.rating === 'AA Large'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-green-100 text-green-700'
+                }`}>
+                  {contrastInfo.rating === 'Fail' || contrastInfo.rating === 'AA Large' ? '⚠️ Low Contrast' : '✅ Good Contrast'} ({contrastInfo.ratio.toFixed(2)}:1)
+                </span>
               </div>
               <div className="flex items-center gap-4">
                 <label htmlFor="secondary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Secondary Brand Color (for gradients)</label>
