@@ -9,6 +9,8 @@ export default function Home() {
   const [url, setUrl] = useState('');
   const [assets, setAssets] = useState<Record<string, string> | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isManual, setIsManual] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState('#000000');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -33,14 +35,23 @@ export default function Home() {
     setIsGenerating(true);
     const formData = new FormData();
     formData.append('logo', logo);
+    
+    if (isManual) {
+      formData.append('primary', primaryColor);
+    }
 
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
         body: formData,
       });
-      const data = await res.json();
-      setAssets(data);
+      const { assets, colors } = await res.json();
+      setAssets(assets);
+      
+      // In auto mode, sync the picker to what was extracted
+      if (!isManual && colors?.primary) {
+        setPrimaryColor(colors.primary); 
+      }
     } catch (error) {
       console.error('Generation failed', error);
     } finally {
@@ -91,6 +102,31 @@ export default function Home() {
               >
                 Fetch
               </button>
+            </div>
+
+            <div className="flex flex-col gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-800">
+              <div className="flex items-center justify-between">
+                <label htmlFor="manual-mode" className="font-medium cursor-pointer">Manual Color Override</label>
+                <input
+                  id="manual-mode"
+                  type="checkbox"
+                  checked={isManual}
+                  onChange={(e) => setIsManual(e.target.checked)}
+                  className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex items-center gap-4">
+                <label htmlFor="primary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Primary Brand Color</label>
+                <input
+                  id="primary-color"
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  disabled={!isManual}
+                  className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <span className="text-sm font-mono text-zinc-500 uppercase">{primaryColor}</span>
+              </div>
             </div>
 
             <button
