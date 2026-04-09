@@ -14,7 +14,7 @@ import { db, Project } from '@/lib/db';
 import { SharePointGenerator } from '@/components/SharePointGenerator';
 import { TeamsGenerator } from '@/components/TeamsGenerator';
 
-function BrandingOS() {
+function GeneratorApp() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const projectId = searchParams.get('project');
@@ -528,8 +528,8 @@ function BrandingOS() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen font-bold text-xl animate-pulse">Initializing BrandingOS...</div>}>
-      <BrandingOS />
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen font-bold text-xl animate-pulse">Loading Entra ID Branding Generator...</div>}>
+      <GeneratorApp />
     </Suspense>
   );
 }

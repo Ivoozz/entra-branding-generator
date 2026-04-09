@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Entra ID Branding Generator - BrandingOS",
+  title: "Entra ID Branding Generator",
   description: "Advanced branding generator for Microsoft Entra ID",
 };
 

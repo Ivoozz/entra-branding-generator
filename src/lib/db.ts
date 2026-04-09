@@ -12,7 +12,7 @@ export interface Project {
   updatedAt: number;
 }
 
-const db = new Dexie('BrandingOS') as Dexie & {
+const db = new Dexie('EntraBrandingDB') as Dexie & {
   projects: EntityTable<Project, 'id'>;
 };
 

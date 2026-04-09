@@ -83,7 +83,7 @@ export default function Sidebar() {
       <div className="p-6 border-b border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-2 mb-6 text-blue-600 dark:text-blue-500">
           <Zap className="w-8 h-8 fill-current" />
-          <h2 className="text-xl font-black tracking-tight text-black dark:text-white">BrandingOS</h2>
+          <h2 className="text-xl font-black tracking-tight text-black dark:text-white uppercase">Entra Branding</h2>
         </div>
         
         <button
