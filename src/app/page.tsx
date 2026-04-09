@@ -7,6 +7,7 @@ import BrandingPreview from '@/components/BrandingPreview';
 import LoginMockup from '@/components/LoginMockup';
 import ProceduralBg, { ProceduralBgHandle } from '@/components/ProceduralBg';
 import { getContrastRatio, getContrastRating } from '@/lib/accessibility';
+import { generateStyleGuide } from '@/lib/style-guide';
 
 export default function Home() {
   const [logo, setLogo] = useState<File | null>(null);
@@ -98,6 +99,21 @@ export default function Home() {
     link.href = URL.createObjectURL(content);
     link.download = 'entra-branding.zip';
     link.click();
+  };
+
+  const handleDownloadStyleGuide = async () => {
+    if (!assets) return;
+    const logoUrl = logo ? URL.createObjectURL(logo) : null;
+    await generateStyleGuide({
+      logoUrl,
+      colors: {
+        primary: primaryColor,
+        secondary: secondaryColor,
+      },
+      contrastRatio: contrastInfo,
+      assets,
+    });
+    if (logoUrl) URL.revokeObjectURL(logoUrl);
   };
 
   return (
@@ -286,10 +302,10 @@ export default function Home() {
                   <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
                     <label className="font-medium text-sm text-zinc-600 dark:text-zinc-300">Logo Style Variant</label>
                     <div className="flex gap-2">
-                      {['original', 'white', 'black'].map((variant) => (
+                      {(['original', 'white', 'black'] as const).map((variant) => (
                         <button
                           key={variant}
-                          onClick={() => setLogoVariant(variant as any)}
+                          onClick={() => setLogoVariant(variant)}
                           className={`flex-1 py-2 px-4 rounded-md border text-sm capitalize transition-all ${
                             logoVariant === variant
                               ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
@@ -323,12 +339,20 @@ export default function Home() {
               theme={theme}
             />
             <BrandingPreview assets={assets} currentTheme={theme} />
-            <button
-              onClick={handleDownloadAll}
-              className="mt-8 px-8 py-4 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 transition-all shadow-md"
-            >
-              Download All (ZIP)
-            </button>
+            <div className="flex gap-4 mt-8">
+              <button
+                onClick={handleDownloadAll}
+                className="px-8 py-4 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 transition-all shadow-md"
+              >
+                Download All (ZIP)
+              </button>
+              <button
+                onClick={handleDownloadStyleGuide}
+                className="px-8 py-4 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-all shadow-md"
+              >
+                Download Style Guide (PDF)
+              </button>
+            </div>
           </>
         )}
       </main>
