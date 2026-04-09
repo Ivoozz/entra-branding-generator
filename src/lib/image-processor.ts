@@ -1,8 +1,15 @@
 import sharp from 'sharp';
-import { ASSET_SPECS } from './types';
+import { ASSET_SPECS, BrandingColors } from './types';
 
-export async function processLogo(buffer: Buffer) {
+export async function processLogo(buffer: Buffer, customColors?: Partial<BrandingColors>) {
   const results: Record<string, Buffer> = {};
+  
+  // Extract dominant color for auto-mode
+  const stats = await sharp(buffer).stats();
+  const dominant = stats.channels.map(c => Math.round(c.mean));
+  const extractedPrimary = `rgb(${dominant[0]}, ${dominant[1]}, ${dominant[2]})`;
+  
+  const primary = customColors?.primary || extractedPrimary;
 
   for (const [key, spec] of Object.entries(ASSET_SPECS)) {
     let pipeline = sharp(buffer)
@@ -12,20 +19,21 @@ export async function processLogo(buffer: Buffer) {
       });
 
     if (key === 'background') {
-      // Logic for generating gradient/color background based on logo
-      const stats = await sharp(buffer).stats();
-      const dominant = stats.channels.map(c => Math.round(c.mean));
       pipeline = sharp({
         create: {
           width: spec.width,
           height: spec.height,
           channels: 4,
-          background: { r: dominant[0], g: dominant[1], b: dominant[2], alpha: 1 }
+          background: primary
         }
       });
     }
 
     results[key] = await pipeline.toFormat(spec.format).toBuffer();
   }
-  return results;
+  
+  return {
+    assets: results,
+    colors: { primary }
+  };
 }

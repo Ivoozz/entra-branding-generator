@@ -14,3 +14,14 @@ export const ASSET_SPECS: Record<string, BrandingAsset> = {
   squareLight: { name: 'square-light', width: 240, height: 240, maxSizeKB: 50, format: 'png' },
   squareDark: { name: 'square-dark', width: 240, height: 240, maxSizeKB: 50, format: 'png' },
 };
+
+export interface BrandingColors {
+  primary: string; // HEX or RGB
+  secondary?: string; // HEX or RGB
+  darkBackground?: string; // HEX or RGB
+}
+
+export interface BrandingResponse {
+  assets: Record<string, string>;
+  colors: BrandingColors;
+}
