@@ -20,6 +20,7 @@ export interface BrandingColors {
   secondary?: string; // HEX or RGB
   darkBackground?: string; // HEX or RGB
   logoPadding?: number; // 0 to 50
+  monochrome?: 'original' | 'white' | 'black';
 }
 
 export interface BrandingResponse {
