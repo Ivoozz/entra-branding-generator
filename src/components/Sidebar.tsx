@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db, Project } from '@/lib/db';
-import { Plus, Folder, Trash2, MoreVertical, Search, Zap } from 'lucide-react';
+import { Plus, Folder, Trash2, MoreVertical, Search, Zap, Settings, Loader2 } from 'lucide-react';
 
 export default function Sidebar() {
   const router = useRouter();
@@ -12,6 +12,7 @@ export default function Sidebar() {
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState('');
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -25,6 +26,23 @@ export default function Sidebar() {
     const interval = setInterval(fetchProjects, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleCheckUpdate = async () => {
+    setCheckingUpdate(true);
+    try {
+      const res = await fetch('/api/system/update');
+      const data = await res.json();
+      if (data.upToDate) {
+        alert(`System is up to date (v${data.version})`);
+      } else {
+        alert(`Update available! Current version: v${data.version}`);
+      }
+    } catch (error) {
+      alert('Failed to check for updates');
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
 
   const handleNewProject = async () => {
     const id = crypto.randomUUID();
@@ -120,7 +138,19 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
+      <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+        <button
+          onClick={handleCheckUpdate}
+          disabled={checkingUpdate}
+          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-md transition-all disabled:opacity-50"
+        >
+          {checkingUpdate ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Settings className="w-4 h-4" />
+          )}
+          System Settings
+        </button>
         <div className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-500">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
           Local Storage Ready
