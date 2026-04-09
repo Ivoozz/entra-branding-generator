@@ -5,6 +5,11 @@ A specialized tool designed to automate the generation of branding assets requir
 ## Features
 
 - **Automated Resizing**: Converts a single high-resolution logo into the 6 specific dimensions required by Microsoft.
+- **Advanced Style Suite**:
+  - **Theme Switcher**: Preview your branding in both Light and Dark modes.
+  - **Monochrome Variants**: Generate white or black logo versions for optimal contrast.
+  - **Procedural Backgrounds**: Create a custom "Fluent-style" background based on your brand colors.
+  - **Style Guide Export**: Download a professional PDF guide with your color palette and accessibility scores.
 - **Smart Backgrounds**: Generates a matching 1920x1080 background image based on the dominant colors of your logo.
 - **Preview Suite**: View how your logo will look in different contexts (Sign-in, Header, Favicon) before downloading.
 - **ZIP Export**: Download all generated assets in a single bundle, ready for upload to the Entra ID portal.
@@ -27,6 +32,7 @@ The tool generates the following 6 assets according to Microsoft's specification
 - **Image Processing**: [Sharp](https://sharp.pixelplumbing.com/) (Node.js)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Compression**: [JSZip](https://stuk.github.io/jszip/)
+- **PDF Generation**: [jsPDF](https://rawgit.com/MrRio/jsPDF/master/docs/index.html)
 
 ## Local Setup
 
