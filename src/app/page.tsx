@@ -16,6 +16,7 @@ export default function Home() {
   const [primaryColor, setPrimaryColor] = useState('#000000');
   const [secondaryColor, setSecondaryColor] = useState('#000000');
   const [logoPadding, setLogoPadding] = useState(0);
+  const [logoVariant, setLogoVariant] = useState<'original' | 'white' | 'black'>('original');
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
@@ -55,6 +56,7 @@ export default function Home() {
     }
     
     formData.append('logoPadding', logoPadding.toString());
+    formData.append('monochrome', logoVariant);
 
     try {
       const res = await fetch('/api/generate', {
@@ -232,6 +234,25 @@ export default function Home() {
                       className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
                     />
                     <p className="text-xs text-zinc-500">Increases the whitespace around the logo in square assets.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
+                    <label className="font-medium text-sm text-zinc-600 dark:text-zinc-300">Logo Style Variant</label>
+                    <div className="flex gap-2">
+                      {['original', 'white', 'black'].map((variant) => (
+                        <button
+                          key={variant}
+                          onClick={() => setLogoVariant(variant as any)}
+                          className={`flex-1 py-2 px-4 rounded-md border text-sm capitalize transition-all ${
+                            logoVariant === variant
+                              ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                              : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                          }`}
+                        >
+                          {variant}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
