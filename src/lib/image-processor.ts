@@ -1,7 +1,11 @@
 import sharp from 'sharp';
 import { ASSET_SPECS, BrandingColors } from './types';
 
-export async function processLogo(buffer: Buffer, customColors?: Partial<BrandingColors>) {
+export async function processLogo(
+  buffer: Buffer, 
+  customColors?: Partial<BrandingColors>,
+  optimize: boolean = false
+) {
   const results: Record<string, Buffer> = {};
   const monochrome = customColors?.monochrome || 'original';
 
@@ -75,7 +79,12 @@ export async function processLogo(buffer: Buffer, customColors?: Partial<Brandin
       }
     }
 
-    results[key] = await pipeline.toFormat(spec.format).toBuffer();
+    let finalPipeline = pipeline.toFormat(spec.format);
+    if (optimize && spec.format === 'png') {
+      finalPipeline = finalPipeline.png({ quality: 60, compressionLevel: 9 });
+    }
+
+    results[key] = await finalPipeline.toBuffer();
   }
   
   return {

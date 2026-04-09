@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
     const logoPadding = formData.get('logoPadding') ? Number(formData.get('logoPadding')) : undefined;
     const monochrome = formData.get('monochrome') as 'original' | 'white' | 'black' | null;
     const customBackground = formData.get('customBackground') as string | null;
+    const optimize = formData.get('optimize') === 'true';
     
     if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
       logoPadding,
       monochrome: monochrome || 'original',
       customBackground
-    });
+    }, optimize);
     
     const assetResponse: Record<string, string> = {};
     for (const [key, buf] of Object.entries(assets)) {

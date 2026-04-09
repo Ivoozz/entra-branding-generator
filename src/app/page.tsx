@@ -6,6 +6,7 @@ import { Sun, Moon, Image as ImageIcon, Layers, Palette, Save, CheckCircle } fro
 import { useSearchParams, useRouter } from 'next/navigation';
 import BrandingPreview from '@/components/BrandingPreview';
 import LoginMockup from '@/components/LoginMockup';
+import PreFlightCheck from '@/components/PreFlightCheck';
 import ProceduralBg, { ProceduralBgHandle } from '@/components/ProceduralBg';
 import { getContrastRatio, getContrastRating } from '@/lib/accessibility';
 import { generateStyleGuide } from '@/lib/style-guide';
@@ -31,6 +32,7 @@ export default function Home() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [projectName, setProjectName] = useState('Default Project');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [optimize, setOptimize] = useState(false);
 
   const proceduralBgRef = useRef<ProceduralBgHandle>(null);
 
@@ -147,7 +149,7 @@ export default function Home() {
     }
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (shouldOptimize = false) => {
     if (!logo) return;
     setIsGenerating(true);
     const formData = new FormData();
@@ -160,6 +162,7 @@ export default function Home() {
     
     formData.append('logoPadding', logoPadding.toString());
     formData.append('monochrome', logoVariant);
+    formData.append('optimize', (optimize || shouldOptimize).toString());
 
     if (bgMode === 'procedural' && proceduralBgRef.current) {
       const customBackground = proceduralBgRef.current.getDataUrl();
@@ -443,7 +446,7 @@ export default function Home() {
             </div>
 
             <button
-              onClick={handleGenerate}
+              onClick={() => handleGenerate()}
               disabled={!logo || isGenerating}
               className="w-full py-4 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 disabled:bg-zinc-400 transition-all shadow-md"
             >
@@ -454,6 +457,13 @@ export default function Home() {
 
         {assets && (
           <>
+            <PreFlightCheck 
+              assets={assets} 
+              onOptimize={() => {
+                setOptimize(true);
+                handleGenerate(true);
+              }} 
+            />
             <LoginMockup 
               backgroundUrl={assets.background || null} 
               logoUrl={assets.banner || assets.squareLight || null} 
