@@ -23,9 +23,14 @@ export async function processLogo(
     if (key !== 'background') {
       pipeline = sharp(buffer);
 
-      if (monochrome === 'white') {
+      let effectiveMonochrome = monochrome;
+      if (key === 'teamsMonoIcon' && effectiveMonochrome === 'original') {
+        effectiveMonochrome = 'white'; // Default to white for mono icons if not specified
+      }
+
+      if (effectiveMonochrome === 'white') {
         pipeline = pipeline.negate().grayscale().threshold(128);
-      } else if (monochrome === 'black') {
+      } else if (effectiveMonochrome === 'black') {
         pipeline = pipeline.grayscale().threshold(128);
       }
 

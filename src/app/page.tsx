@@ -11,6 +11,8 @@ import ProceduralBg, { ProceduralBgHandle } from '@/components/ProceduralBg';
 import { getContrastRatio, getContrastRating } from '@/lib/accessibility';
 import { generateStyleGuide } from '@/lib/style-guide';
 import { db, Project } from '@/lib/db';
+import { SharePointGenerator } from '@/components/SharePointGenerator';
+import { TeamsGenerator } from '@/components/TeamsGenerator';
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -33,6 +35,7 @@ export default function Home() {
   const [projectName, setProjectName] = useState('Default Project');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [optimize, setOptimize] = useState(false);
+  const [toolMode, setToolMode] = useState<'entra' | 'sharepoint' | 'teams'>('entra');
 
   const proceduralBgRef = useRef<ProceduralBgHandle>(null);
 
@@ -259,232 +262,260 @@ export default function Home() {
             )}
           </button>
         </div>
-        
-        <div className="w-full p-8 bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 mb-8">
-          <div className="flex flex-col gap-6">
-            <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg p-12 text-center hover:border-blue-500 transition-colors relative overflow-hidden group">
-              {logoDataUrl && (
-                <img src={logoDataUrl} alt="Logo" className="absolute inset-0 w-full h-full object-contain opacity-10 group-hover:opacity-20 transition-opacity" />
-              )}
-              <input type="file" onChange={handleFileChange} className="hidden" id="file-upload" accept="image/*" />
-              <label htmlFor="file-upload" className="cursor-pointer relative z-10">
-                <p className="text-lg mb-2">{logo ? logo.name : 'Drag & drop your logo here or click to browse'}</p>
-                <span className="text-sm text-zinc-500 italic">Supports PNG, JPG (SVG recommended)</span>
-              </label>
-            </div>
 
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com/logo.png"
-                className="flex-1 p-3 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent text-black dark:text-white"
-              />
-              <button 
-                onClick={handleUrlFetch}
-                className="px-4 bg-zinc-200 dark:bg-zinc-800 rounded-md hover:bg-zinc-300 dark:hover:bg-zinc-700"
-              >
-                Fetch
-              </button>
-            </div>
-
-            <div className="flex border-b border-zinc-200 dark:border-zinc-800">
-              <button
-                onClick={() => setActiveTab('basic')}
-                className={`px-6 py-3 font-medium transition-colors border-b-2 ${
-                  activeTab === 'basic' 
-                    ? 'border-blue-500 text-blue-600' 
-                    : 'border-transparent text-zinc-500 hover:text-zinc-700'
-                }`}
-              >
-                Basic
-              </button>
-              <button
-                onClick={() => setActiveTab('advanced')}
-                className={`px-6 py-3 font-medium transition-colors border-b-2 ${
-                  activeTab === 'advanced' 
-                    ? 'border-blue-500 text-blue-600' 
-                    : 'border-transparent text-zinc-500 hover:text-zinc-700'
-                }`}
-              >
-                Advanced
-              </button>
-            </div>
-
-            <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-800 min-h-[200px]">
-              {activeTab === 'basic' ? (
-                <div className="flex flex-col gap-4">
-                  <p className="text-sm text-zinc-500">Auto-extracted colors will be used. Upload a logo to see the results.</p>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="manual-mode-basic" className="font-medium cursor-pointer">Manual Color Override</label>
-                    <input
-                      id="manual-mode-basic"
-                      type="checkbox"
-                      checked={isManual}
-                      onChange={(e) => setIsManual(e.target.checked)}
-                      className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-6">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                      <label htmlFor="manual-mode-adv" className="font-medium cursor-pointer">Manual Color Override</label>
-                      <input
-                        id="manual-mode-adv"
-                        type="checkbox"
-                        checked={isManual}
-                        onChange={(e) => setIsManual(e.target.checked)}
-                        className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <label htmlFor="primary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Primary Brand Color</label>
-                      <input
-                        id="primary-color"
-                        type="color"
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        disabled={!isManual}
-                        className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                      <span className="text-sm font-mono text-zinc-500 uppercase">{primaryColor}</span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 ${
-                        contrastInfo.rating === 'Fail' || contrastInfo.rating === 'AA Large'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-green-100 text-green-700'
-                      }`}>
-                        {contrastInfo.rating === 'Fail' || contrastInfo.rating === 'AA Large' ? '⚠️ Low Contrast' : '✅ Good Contrast'} ({contrastInfo.ratio.toFixed(2)}:1)
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <label htmlFor="secondary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Secondary Brand Color (for gradients)</label>
-                      <input
-                        id="secondary-color"
-                        type="color"
-                        value={secondaryColor}
-                        onChange={(e) => setSecondaryColor(e.target.value)}
-                        disabled={!isManual}
-                        className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                      <span className="text-sm font-mono text-zinc-500 uppercase">{secondaryColor}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
-                    <label className="font-medium">Background Style</label>
-                    <div className="grid grid-cols-3 gap-3">
-                      <button
-                        onClick={() => setBgMode('solid')}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
-                          bgMode === 'solid' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20' : 'border-zinc-200 dark:border-zinc-800'
-                        }`}
-                      >
-                        <Palette className="w-5 h-5" />
-                        <span className="text-xs font-medium">Solid</span>
-                      </button>
-                      <button
-                        onClick={() => setBgMode('gradient')}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
-                          bgMode === 'gradient' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20' : 'border-zinc-200 dark:border-zinc-800'
-                        }`}
-                      >
-                        <Layers className="w-5 h-5" />
-                        <span className="text-xs font-medium">Gradient</span>
-                      </button>
-                      <button
-                        onClick={() => setBgMode('procedural')}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
-                          bgMode === 'procedural' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20' : 'border-zinc-200 dark:border-zinc-800'
-                        }`}
-                      >
-                        <ImageIcon className="w-5 h-5" />
-                        <span className="text-xs font-medium">Procedural</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
-                    <div className="flex justify-between items-center">
-                      <label htmlFor="logo-padding" className="font-medium">Logo Padding / Zoom</label>
-                      <span className="text-sm font-mono bg-zinc-200 dark:bg-zinc-700 px-2 py-1 rounded">{logoPadding}%</span>
-                    </div>
-                    <input
-                      id="logo-padding"
-                      type="range"
-                      min="0"
-                      max="50"
-                      value={logoPadding}
-                      onChange={(e) => setLogoPadding(parseInt(e.target.value))}
-                      className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                    />
-                    <p className="text-xs text-zinc-500">Increases the whitespace around the logo in square assets.</p>
-                  </div>
-
-                  <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
-                    <label className="font-medium text-sm text-zinc-600 dark:text-zinc-300">Logo Style Variant</label>
-                    <div className="flex gap-2">
-                      {(['original', 'white', 'black'] as const).map((variant) => (
-                        <button
-                          key={variant}
-                          onClick={() => setLogoVariant(variant)}
-                          className={`flex-1 py-2 px-4 rounded-md border text-sm capitalize transition-all ${
-                            logoVariant === variant
-                              ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
-                              : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-                          }`}
-                        >
-                          {variant}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
+        <div className="w-full flex border-b border-zinc-200 dark:border-zinc-800 mb-8 overflow-x-auto scrollbar-hide">
+          {(['entra', 'sharepoint', 'teams'] as const).map((mode) => (
             <button
-              onClick={() => handleGenerate()}
-              disabled={!logo || isGenerating}
-              className="w-full py-4 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 disabled:bg-zinc-400 transition-all shadow-md"
+              key={mode}
+              onClick={() => setToolMode(mode)}
+              className={`px-8 py-4 font-bold capitalize transition-all border-b-4 shrink-0 ${
+                toolMode === mode 
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+                  : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+              }`}
             >
-              {isGenerating ? 'Generating...' : 'Generate Branding Bundle'}
+              {mode === 'entra' ? 'Entra ID' : mode}
             </button>
-          </div>
+          ))}
         </div>
-
-        {assets && (
+        
+        {toolMode === 'entra' ? (
           <>
-            <PreFlightCheck 
-              assets={assets} 
-              onOptimize={() => {
-                setOptimize(true);
-                handleGenerate(true);
-              }} 
-            />
-            <LoginMockup 
-              backgroundUrl={assets.background || null} 
-              logoUrl={assets.banner || assets.squareLight || null} 
-              theme={theme}
-            />
-            <BrandingPreview assets={assets} currentTheme={theme} />
-            <div className="flex gap-4 mt-8">
-              <button
-                onClick={handleDownloadAll}
-                className="px-8 py-4 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 transition-all shadow-md"
-              >
-                Download All (ZIP)
-              </button>
-              <button
-                onClick={handleDownloadStyleGuide}
-                className="px-8 py-4 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-all shadow-md"
-              >
-                Download Style Guide (PDF)
-              </button>
+            <div className="w-full p-8 bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 mb-8">
+              <div className="flex flex-col gap-6">
+                <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg p-12 text-center hover:border-blue-500 transition-colors relative overflow-hidden group">
+                  {logoDataUrl && (
+                    <img src={logoDataUrl} alt="Logo" className="absolute inset-0 w-full h-full object-contain opacity-10 group-hover:opacity-20 transition-opacity" />
+                  )}
+                  <input type="file" onChange={handleFileChange} className="hidden" id="file-upload" accept="image/*" />
+                  <label htmlFor="file-upload" className="cursor-pointer relative z-10">
+                    <p className="text-lg mb-2">{logo ? logo.name : 'Drag & drop your logo here or click to browse'}</p>
+                    <span className="text-sm text-zinc-500 italic">Supports PNG, JPG (SVG recommended)</span>
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="https://example.com/logo.png"
+                    className="flex-1 p-3 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent text-black dark:text-white"
+                  />
+                  <button 
+                    onClick={handleUrlFetch}
+                    className="px-4 bg-zinc-200 dark:bg-zinc-800 rounded-md hover:bg-zinc-300 dark:hover:bg-zinc-700"
+                  >
+                    Fetch
+                  </button>
+                </div>
+
+                <div className="flex border-b border-zinc-200 dark:border-zinc-800">
+                  <button
+                    onClick={() => setActiveTab('basic')}
+                    className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                      activeTab === 'basic' 
+                        ? 'border-blue-500 text-blue-600' 
+                        : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                    }`}
+                  >
+                    Basic
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('advanced')}
+                    className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                      activeTab === 'advanced' 
+                        ? 'border-blue-500 text-blue-600' 
+                        : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                    }`}
+                  >
+                    Advanced
+                  </button>
+                </div>
+
+                <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-800 min-h-[200px]">
+                  {activeTab === 'basic' ? (
+                    <div className="flex flex-col gap-4">
+                      <p className="text-sm text-zinc-500">Auto-extracted colors will be used. Upload a logo to see the results.</p>
+                      <div className="flex items-center justify-between">
+                        <label htmlFor="manual-mode-basic" className="font-medium cursor-pointer">Manual Color Override</label>
+                        <input
+                          id="manual-mode-basic"
+                          type="checkbox"
+                          checked={isManual}
+                          onChange={(e) => setIsManual(e.target.checked)}
+                          className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-6">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
+                          <label htmlFor="manual-mode-adv" className="font-medium cursor-pointer">Manual Color Override</label>
+                          <input
+                            id="manual-mode-adv"
+                            type="checkbox"
+                            checked={isManual}
+                            onChange={(e) => setIsManual(e.target.checked)}
+                            className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label htmlFor="primary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Primary Brand Color</label>
+                          <input
+                            id="primary-color"
+                            type="color"
+                            value={primaryColor}
+                            onChange={(e) => setPrimaryColor(e.target.value)}
+                            disabled={!isManual}
+                            className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span className="text-sm font-mono text-zinc-500 uppercase">{primaryColor}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 ${
+                            contrastInfo.rating === 'Fail' || contrastInfo.rating === 'AA Large'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-green-100 text-green-700'
+                          }`}>
+                            {contrastInfo.rating === 'Fail' || contrastInfo.rating === 'AA Large' ? '⚠️ Low Contrast' : '✅ Good Contrast'} ({contrastInfo.ratio.toFixed(2)}:1)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label htmlFor="secondary-color" className={`text-sm ${!isManual ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-300'}`}>Secondary Brand Color (for gradients)</label>
+                          <input
+                            id="secondary-color"
+                            type="color"
+                            value={secondaryColor}
+                            onChange={(e) => setSecondaryColor(e.target.value)}
+                            disabled={!isManual}
+                            className="p-1 h-10 w-20 rounded bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span className="text-sm font-mono text-zinc-500 uppercase">{secondaryColor}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
+                        <label className="font-medium">Background Style</label>
+                        <div className="grid grid-cols-3 gap-3">
+                          <button
+                            onClick={() => setBgMode('solid')}
+                            className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
+                              bgMode === 'solid' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20' : 'border-zinc-200 dark:border-zinc-800'
+                            }`}
+                          >
+                            <Palette className="w-5 h-5" />
+                            <span className="text-xs font-medium">Solid</span>
+                          </button>
+                          <button
+                            onClick={() => setBgMode('gradient')}
+                            className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
+                              bgMode === 'gradient' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20' : 'border-zinc-200 dark:border-zinc-800'
+                            }`}
+                          >
+                            <Layers className="w-5 h-5" />
+                            <span className="text-xs font-medium">Gradient</span>
+                          </button>
+                          <button
+                            onClick={() => setBgMode('procedural')}
+                            className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
+                              bgMode === 'procedural' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20' : 'border-zinc-200 dark:border-zinc-800'
+                            }`}
+                          >
+                            <ImageIcon className="w-5 h-5" />
+                            <span className="text-xs font-medium">Procedural</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
+                        <div className="flex justify-between items-center">
+                          <label htmlFor="logo-padding" className="font-medium">Logo Padding / Zoom</label>
+                          <span className="text-sm font-mono bg-zinc-200 dark:bg-zinc-700 px-2 py-1 rounded">{logoPadding}%</span>
+                        </div>
+                        <input
+                          id="logo-padding"
+                          type="range"
+                          min="0"
+                          max="50"
+                          value={logoPadding}
+                          onChange={(e) => setLogoPadding(parseInt(e.target.value))}
+                          className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                        />
+                        <p className="text-xs text-zinc-500">Increases the whitespace around the logo in square assets.</p>
+                      </div>
+
+                      <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-700 pt-6">
+                        <label className="font-medium text-sm text-zinc-600 dark:text-zinc-300">Logo Style Variant</label>
+                        <div className="flex gap-2">
+                          {(['original', 'white', 'black'] as const).map((variant) => (
+                            <button
+                              key={variant}
+                              onClick={() => setLogoVariant(variant)}
+                              className={`flex-1 py-2 px-4 rounded-md border text-sm capitalize transition-all ${
+                                logoVariant === variant
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                                  : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                              }`}
+                            >
+                              {variant}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => handleGenerate()}
+                  disabled={!logo || isGenerating}
+                  className="w-full py-4 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 disabled:bg-zinc-400 transition-all shadow-md"
+                >
+                  {isGenerating ? 'Generating...' : 'Generate Branding Bundle'}
+                </button>
+              </div>
             </div>
+
+            {assets && (
+              <>
+                <PreFlightCheck 
+                  assets={assets} 
+                  onOptimize={() => {
+                    setOptimize(true);
+                    handleGenerate(true);
+                  }} 
+                />
+                <LoginMockup 
+                  backgroundUrl={assets.background || null} 
+                  logoUrl={assets.banner || assets.squareLight || null} 
+                  theme={theme}
+                />
+                <BrandingPreview assets={assets} currentTheme={theme} />
+                <div className="flex gap-4 mt-8">
+                  <button
+                    onClick={handleDownloadAll}
+                    className="px-8 py-4 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 transition-all shadow-md"
+                  >
+                    Download All (ZIP)
+                  </button>
+                  <button
+                    onClick={handleDownloadStyleGuide}
+                    className="px-8 py-4 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-all shadow-md"
+                  >
+                    Download Style Guide (PDF)
+                  </button>
+                </div>
+              </>
+            )}
           </>
+        ) : toolMode === 'sharepoint' ? (
+          <div className="w-full">
+            <SharePointGenerator primaryColor={primaryColor} />
+          </div>
+        ) : (
+          <div className="w-full">
+            <TeamsGenerator assets={assets || {}} />
+          </div>
         )}
       </main>
     </div>
