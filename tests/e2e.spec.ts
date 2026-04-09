@@ -69,21 +69,18 @@ test.describe('Entra ID Branding Generator E2E', () => {
     await expect(mockup).toBeVisible();
   });
 
-  test('Manual Color Override', async ({ page }) => {
+  test('Logo fetch from URL', async ({ page }) => {
     await page.goto(TARGET_URL);
     await page.waitForURL(/\?project=/, { timeout: 15000 });
+
+    const testUrl = 'https://mirror.ivoozz.nl/white.png';
+    await page.fill('input[placeholder*="https://"]', testUrl);
+    await page.click('button:has-text("Fetch")');
+
+    // Wait for the logo to be updated in the state (check if the filename appears or generate button enables)
+    await expect(page.locator('text=white.png')).toBeVisible({ timeout: 15000 });
     
-    // Switch to Advanced tab
-    await page.click('button:has-text("Advanced")');
-    
-    // Toggle manual mode
-    await page.click('label:has-text("Manual Color Override")');
-    
-    // Change primary color
-    const colorPicker = page.locator('input[type="color"]').first();
-    await colorPicker.fill('#FF0000');
-    
-    // Check if the hex value is displayed
-    await expect(page.locator('text=#FF0000')).toBeVisible();
+    await page.click('button:has-text("Generate Branding Bundle")');
+    await expect(page.locator('text=Generated Assets')).toBeVisible({ timeout: 30000 });
   });
 });

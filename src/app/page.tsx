@@ -142,9 +142,11 @@ function GeneratorApp() {
   const handleUrlFetch = async () => {
     if (!url) return;
     try {
-      const res = await fetch(url);
+      const res = await fetch(`/api/proxy-image?url=${encodeURIComponent(url)}`);
+      if (!res.ok) throw new Error('Failed to fetch image via proxy');
       const blob = await res.blob();
-      const file = new File([blob], 'logo.png', { type: blob.type });
+      const fileName = url.split('/').pop() || 'logo.png';
+      const file = new File([blob], fileName, { type: blob.type });
       setLogo(file);
       const reader = new FileReader();
       reader.onloadend = () => {
