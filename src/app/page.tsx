@@ -14,7 +14,7 @@ import { db, Project } from '@/lib/db';
 import { SharePointGenerator } from '@/components/SharePointGenerator';
 import { TeamsGenerator } from '@/components/TeamsGenerator';
 
-export default function Home() {
+function BrandingOS() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const projectId = searchParams.get('project');
@@ -42,25 +42,29 @@ export default function Home() {
   // Initialize Default Project if none exists
   useEffect(() => {
     const initDb = async () => {
-      const count = await db.projects.count();
-      if (count === 0) {
-        const id = crypto.randomUUID();
-        const defaultProject: Project = {
-          id,
-          name: 'Default Project',
-          colors: { primary: '#0078d4', secondary: '#000000' },
-          logoPadding: 0,
-          bgMode: 'solid',
-          logoVariant: 'original',
-          updatedAt: Date.now(),
-        };
-        await db.projects.add(defaultProject);
-        router.push(`/?project=${id}`);
-      } else if (!projectId) {
-        const latest = await db.projects.orderBy('updatedAt').reverse().first();
-        if (latest) {
-          router.push(`/?project=${latest.id}`);
+      try {
+        const count = await db.projects.count();
+        if (count === 0) {
+          const id = Math.random().toString(36).substring(2, 15);
+          const defaultProject: Project = {
+            id,
+            name: 'Default Project',
+            colors: { primary: '#0078d4', secondary: '#000000' },
+            logoPadding: 0,
+            bgMode: 'solid',
+            logoVariant: 'original',
+            updatedAt: Date.now(),
+          };
+          await db.projects.add(defaultProject);
+          router.push(`/?project=${id}`);
+        } else if (!projectId) {
+          const latest = await db.projects.orderBy('updatedAt').reverse().first();
+          if (latest) {
+            router.push(`/?project=${latest.id}`);
+          }
         }
+      } catch (err) {
+        console.error('Failed to initialize DB:', err);
       }
     };
     initDb();
@@ -519,5 +523,13 @@ export default function Home() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen font-bold text-xl animate-pulse">Initializing BrandingOS...</div>}>
+      <BrandingOS />
+    </Suspense>
   );
 }
