@@ -1,29 +1,116 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import JSZip from 'jszip';
-import { Sun, Moon, Image as ImageIcon, Layers, Palette } from 'lucide-react';
+import { Sun, Moon, Image as ImageIcon, Layers, Palette, Save, CheckCircle } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import BrandingPreview from '@/components/BrandingPreview';
 import LoginMockup from '@/components/LoginMockup';
 import ProceduralBg, { ProceduralBgHandle } from '@/components/ProceduralBg';
 import { getContrastRatio, getContrastRating } from '@/lib/accessibility';
 import { generateStyleGuide } from '@/lib/style-guide';
+import { db, Project } from '@/lib/db';
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const projectId = searchParams.get('project');
+
   const [logo, setLogo] = useState<File | null>(null);
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   const [url, setUrl] = useState('');
   const [assets, setAssets] = useState<Record<string, string> | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isManual, setIsManual] = useState(false);
-  const [primaryColor, setPrimaryColor] = useState('#000000');
+  const [primaryColor, setPrimaryColor] = useState('#0078d4');
   const [secondaryColor, setSecondaryColor] = useState('#000000');
   const [bgMode, setBgMode] = useState<'solid' | 'gradient' | 'procedural'>('solid');
   const [logoPadding, setLogoPadding] = useState(0);
   const [logoVariant, setLogoVariant] = useState<'original' | 'white' | 'black'>('original');
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [projectName, setProjectName] = useState('Default Project');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const proceduralBgRef = useRef<ProceduralBgHandle>(null);
+
+  // Initialize Default Project if none exists
+  useEffect(() => {
+    const initDb = async () => {
+      const count = await db.projects.count();
+      if (count === 0) {
+        const id = crypto.randomUUID();
+        const defaultProject: Project = {
+          id,
+          name: 'Default Project',
+          colors: { primary: '#0078d4', secondary: '#000000' },
+          logoPadding: 0,
+          bgMode: 'solid',
+          logoVariant: 'original',
+          updatedAt: Date.now(),
+        };
+        await db.projects.add(defaultProject);
+        router.push(`/?project=${id}`);
+      } else if (!projectId) {
+        const latest = await db.projects.orderBy('updatedAt').reverse().first();
+        if (latest) {
+          router.push(`/?project=${latest.id}`);
+        }
+      }
+    };
+    initDb();
+  }, [projectId, router]);
+
+  // Load project when ID changes
+  useEffect(() => {
+    if (!projectId) return;
+
+    const loadProject = async () => {
+      const project = await db.projects.get(projectId);
+      if (project) {
+        setProjectName(project.name);
+        setPrimaryColor(project.colors.primary);
+        setSecondaryColor(project.colors.secondary || '#000000');
+        setLogoPadding(project.logoPadding);
+        setBgMode(project.bgMode);
+        setLogoVariant(project.logoVariant);
+        if (project.logoSource) {
+          setLogoDataUrl(project.logoSource);
+          // Convert data URL back to File for generation if needed
+          const res = await fetch(project.logoSource);
+          const blob = await res.blob();
+          setLogo(new File([blob], 'logo.png', { type: blob.type }));
+        } else {
+          setLogo(null);
+          setLogoDataUrl(null);
+        }
+      }
+    };
+    loadProject();
+  }, [projectId]);
+
+  // Auto-save on changes
+  useEffect(() => {
+    if (!projectId) return;
+
+    const saveProject = async () => {
+      setSaveStatus('saving');
+      await db.projects.update(projectId, {
+        name: projectName,
+        colors: { primary: primaryColor, secondary: secondaryColor },
+        logoPadding,
+        bgMode,
+        logoVariant,
+        logoSource: logoDataUrl || undefined,
+        updatedAt: Date.now(),
+      });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    };
+
+    const debounceTimer = setTimeout(saveProject, 1000);
+    return () => clearTimeout(debounceTimer);
+  }, [projectId, projectName, primaryColor, secondaryColor, logoPadding, bgMode, logoVariant, logoDataUrl]);
 
   const contrastInfo = useMemo(() => {
     const ratio = getContrastRatio(primaryColor, '#FFFFFF');
@@ -33,7 +120,13 @@ export default function Home() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setLogo(e.target.files[0]);
+      const file = e.target.files[0];
+      setLogo(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoDataUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -44,6 +137,11 @@ export default function Home() {
       const blob = await res.blob();
       const file = new File([blob], 'logo.png', { type: blob.type });
       setLogo(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoDataUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error('Failed to fetch image from URL', error);
     }
@@ -117,7 +215,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen items-center bg-zinc-50 dark:bg-black p-8 font-sans transition-colors duration-300">
+    <div className="flex flex-col min-h-screen items-center p-8 font-sans transition-colors duration-300">
       <ProceduralBg 
         ref={proceduralBgRef}
         primaryColor={primaryColor}
@@ -125,7 +223,27 @@ export default function Home() {
       />
       <main className="w-full max-w-4xl flex flex-col items-center">
         <div className="flex justify-between w-full items-center mb-8">
-          <h1 className="text-4xl font-bold">Entra ID Branding Generator</h1>
+          <div className="flex flex-col">
+            <input
+              type="text"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              className="text-4xl font-bold bg-transparent border-none focus:ring-0 p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded px-2 -ml-2 transition-all cursor-text"
+            />
+            <div className="flex items-center gap-2 mt-1 px-2">
+              {saveStatus === 'saving' ? (
+                <span className="text-xs text-zinc-500 flex items-center gap-1">
+                  <Save className="w-3 h-3 animate-spin" /> Saving changes...
+                </span>
+              ) : saveStatus === 'saved' ? (
+                <span className="text-xs text-green-500 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" /> Saved to vault
+                </span>
+              ) : (
+                <span className="text-xs text-zinc-400 italic">Project synced locally</span>
+              )}
+            </div>
+          </div>
           <button
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
             className="p-3 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all"
@@ -141,9 +259,12 @@ export default function Home() {
         
         <div className="w-full p-8 bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 mb-8">
           <div className="flex flex-col gap-6">
-            <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg p-12 text-center hover:border-blue-500 transition-colors">
+            <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg p-12 text-center hover:border-blue-500 transition-colors relative overflow-hidden group">
+              {logoDataUrl && (
+                <img src={logoDataUrl} alt="Logo" className="absolute inset-0 w-full h-full object-contain opacity-10 group-hover:opacity-20 transition-opacity" />
+              )}
               <input type="file" onChange={handleFileChange} className="hidden" id="file-upload" accept="image/*" />
-              <label htmlFor="file-upload" className="cursor-pointer">
+              <label htmlFor="file-upload" className="cursor-pointer relative z-10">
                 <p className="text-lg mb-2">{logo ? logo.name : 'Drag & drop your logo here or click to browse'}</p>
                 <span className="text-sm text-zinc-500 italic">Supports PNG, JPG (SVG recommended)</span>
               </label>
