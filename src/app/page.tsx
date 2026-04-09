@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, Suspense } from 'react';
 import JSZip from 'jszip';
 import { Sun, Moon, Image as ImageIcon, Layers, Palette, Save, CheckCircle } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
