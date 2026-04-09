@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import JSZip from 'jszip';
 import BrandingPreview from '@/components/BrandingPreview';
+import LoginMockup from '@/components/LoginMockup';
 
 export default function Home() {
   const [logo, setLogo] = useState<File | null>(null);
@@ -141,6 +142,10 @@ export default function Home() {
 
         {assets && (
           <>
+            <LoginMockup 
+              backgroundUrl={assets.background || null} 
+              logoUrl={assets.banner || assets.squareLight || null} 
+            />
             <BrandingPreview assets={assets} />
             <button
               onClick={handleDownloadAll}
